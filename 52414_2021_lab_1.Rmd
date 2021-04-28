@@ -1,0 +1,154 @@
+---
+title: "52414 - lab 1"
+author: "52414"
+date: "27/4/2021"
+output: html_document
+---
+
+# *Lab 1: Basic Data Wrangling and Plotting*  
+<br/><br/>  
+  
+
+<br/><br/>
+  
+  
+### Submission Instructions  
+  
+This lab will be submitted in pairs using GitHub (if you don't have a pair, please contact us).  
+Please follow the steps in the  Git Classroom assignment to create your group's Lab 1 repository.  
+**Important: your team's name must be `FamilyName1_Name1_and_FamilyName2_Name2`**.  
+You can collaborate with your partner using the git environment; You can either make commits straight to master, or create individual branches (recommended). However, once done, be sure to merge your branches to master - you will be graded using the most recent master version - your last push and merge before the deadline.   
+**Please do not open/review other peoples' repositories - we will be notified by GitHub if you do.**
+
+Your final push should include this Rmd file (with your answers filled-in), together with the html file that is outputted automatically by knitr when you knit the Rmd. Anything else will be disregarded. In addition, please adhere to the following file format:    
+`Lab_2_FamilyName1_Name1_and_FamilyName2_Name2.Rmd/html`      
+
+**Submission Deadline: 19/5/2021 at 23:59**
+
+<br/><br/>
+The only allowed libraries are the following (**please do not add your own**):
+```{r, include=FALSE}
+library(tidyverse) # This includes dplyr, stringr, ggplot2, .. 
+library(data.table)
+```  
+<br/><br/>
+
+## Analysis of the World Covid-19 Dataset         
+    
+The `world-of-data` website hosts world-wide epidemiological data on the Corona Virus (COVID-19). 
+The dataset is compiled by the Johns Hopkins University Center for Systems Science and Engineering (JHU CCSE) from various sources, 
+and follows The dataset contains data since January 2020. For the data and more information about it, please visit [here](https://github.com/owid/covid-19-data/tree/master/public/data).    <br>
+  
+You can see several nice visualizations of the data [here](https://ourworldindata.org/covid-vaccinations)
+  
+In this lab we will focus on analyzing the Covid-19 cases, deaths and vaccinations data over time for different countries.   
+
+
+### General Guidance
+- Your solution should be submitted as a full Rmd report integrating text, code, figures and tables. 
+For each question, describe first in the text of your solution what you're trying to do, then include the relevant code, 
+then the results (e.g. figures/tables) and then a textual description of them. 
+
+- In most questions the extraction/manipulation of relevant parts of the data-frame can be performed using commands fron the `tidyverse` and `dplyr` R packages, such as `head`, `arrange`, `aggregate`, `group-by`, `filter`, `select`, `summaries`, `mutate` etc.
+
+- When displaying tables, show the relevant columns and rows with meaningful names, and descirbe the results. 
+
+- When displaying figures, make sure that the figure is clear to the reader, axis ranges are appropriate, labels for the axis , title and different curves/bars are displayed clearly (font sizes are large enough), a legend is shown when needed etc. 
+Explain and descrie in text what is shown in the figure. 
+
+- In many cases, data are missing (e.g. NA). Make sure that all your calculations (e.g. taking the maximum, average, correlation etc.)
+take this into account. Specifically, the calculations should ignore the missing values to allow us to compute the desired results for the rest of the values (for example, using the option `na.rm = TRUE`). 
+
+
+### Questions: 
+
+1. [3 pts]  First, load the complete covid19 dataset in csv format from the world-of-data [world-of-data](https://github.com/owid/covid-19-data/tree/master/public/data) into a data-frame in R.     
+Change if needed the class of the `date` variable to `Date` and check that the class is correct.   
+
+
+2. [6 pt] List in a table the top 5 countries in terms of current `total_cases_per_million`. Show only the country, last-date, and the total number of cases per million. <br>
+Repeat the same with two additional separate tables for top 5 countries for `total_deaths_per_million` and `total_vaccinations_per_hundred`. 
+
+3. [12 pts] 
+a. Write a function that recieves as input the data-frame, and a column name as string. The function plots 
+the value of the input column as a function of the date for each of the six continents (`Africa`, `Asia`, `Europe`, `North America`, `Oceania`, `South America`), shown on the same graph with different colors or symbols. Make sure that the difference between the continents is visualized clearly, use meaningful axis and plot labels, and add an informative legend.  NA or other no-number values should not be displayed.
+
+b. Use the function written in a. and plot of the number of `new_cases` for the continents. 
+Next, make a similar plot for the *log* of the *smoothed* number of new cases. 
+Which plot is easier to interpret? explain. <br>
+Similarly, make two additional separate plots for the *log* of the *smoothed* number of `new_deaths` and `new_vaccinations` as a function of date for the continents. Describe the plotted results.
+
+4. [12 pts] We would like to make a similar plot to the ones in qu. 3 for the number of new tests for each continent.
+However, some of the variables like `new_tests` and `new_test_smoothed` are not given at the continent level, but only at the individual country level. We therefore need to *complete* them for each continent. 
+
+a. Write a function that recieves as input the data-frame and a column to complete, and computes for each continent the corresponding values. 
+The value for a given continent and a specific date (represented in one row of the data-frame) should be a *weighted average* over the values of all countires in the corresponding continent for the same date, with weights proportional to the individual countries' `population`. <br>
+*Guidance:* Make sure you only update rows corresponding to entire continents (rows corresponding to individual countries should remain the same)
+
+b. Apply the function from a. to fill the `new_tests_smoothed` column for the continents, and plot the *log* of the *smoothed* number per continent vs. date using the function from qu. 3. 
+
+
+5. [14 pt] 
+a. Create a new data-frame with one row per country, that for each countrie will store as columns the current `total_cases_per_million` and `total_deaths_per_million`, in addition to the country name (`location`). <br>
+Next, make a scatter plot showing these two columns. Compute a linear regression line of the number of deaths per million as a function of the number of cases per million and add the fitted regression line to the plot. What is the slope and what does it represent? 
+
+b. Find for each country the date at which the number of new `cases` was maximal, and the date at which the number of new `deaths` was maximal, 
+and add them to the data-frame from a. <br>
+Make a scatter plot with a linear regression line as in a. Is the slope close to one? why? What is the intercept and what does it represent ? 
+
+6. [9 pt] We want to compute the world-wide number of `new_cases`, `new_deaths` and `new_vaccinations` by month. Aggregate the country-level data and store the results in a new dataframe called `monthly` with each row corresponding to a month, and columns correponding to the worldwide number of new cases, deaths or vaccinations in this month. <br>
+Show the three columns in three different barplots. <br>
+*Guidance:* (i) Beware to not double-count cases/deaths/vaccinations. (ii) Treat each month seperately (e.g. March 2020 and March 2021 are different).
+
+7. [9 pt] Add to the covid data-frame a new column called `death_rate`, defined for `location` and `date` as the number of `total_deaths` divided by the number of `total_cases`. This column represents the probability of a diagnosed Covid-19 case to die from the disease.    <br>
+Next, make a histogram of the current death rates over all countries with 50 bins. <br>
+List in a table the top 3 countries having the highest death rate. 
+
+
+8. [9 pt] Given that most vaccinations (specifically *Pfizer* and *Moderna*) are given in two-doses, we want to investigate whether different countries employ different vaccination strategies. While some countries vaccinate only individuals for which there are two doseas of the vaccine given at proximity in time (usually less than one month apart), other countries first use the available vaccines to vaccninate as many poeple as possible using one dose, and may delay the second dose for these individuals. <br>
+Create an additional column called `two_dose_fraction`, defined as the number of *fully vaccinated* people divided by the number of *vaccinated* people. <br>
+Next, plot for `Israel`, `United Kingdom` and `United States` this value as a function of date, on the same plot with different colors. 
+What do you think are the vaccination strategies for the different countries based on these plots? explain. 
+
+
+9. [14 pt] We want to use the data in order to study the time delay between the diagnosis of Covid-19 and the death from Covid-19 for cases not surviving the disease. For two functions of time $X(t)$ and $Y(t)$ (here $t$ is discrete, representing for example days) we define the *cross-correlation* as follows: $cross_{corr}(\Delta_t ; X, Y) = Corr(X(t), Y(t+\Delta_t))$. <br>
+That is, the cross-correlation function at the time-delay $\Delta_t$ for two vectors of length $n$ is obtained by computing the Pearson correlation coefficient of the vector $X[1,...,n-\Delta_t]$ with the vector $Y[\Delta_t+1,...,n]$, for $\Delta_t>0$. For $\Delta_t < 0$ we replace the role of $X$ and $Y$ in the formula. 
+
+a. Write a function that recieves as input the data-frame, a country name and the name of two columns, and computes the value of their cross-correlation in this country for time delay of up to two months apart, that is for all values of $\Delta_t$ between $-60$ days and $60$ days. 
+The function should return a vector of length $121$ representing these correlations. 
+
+b. Compute the cross correlation between the number of  `new_cases` and `new_deaths` for *Canada*, and plot it as a function of $\Delta_t$. 
+At what time delay is the cross correlation maximized? what is your interpretation of this time-delay? 
+
+10. [12 pt] Finally, we want to examine if the data shows evidence for the effectiveness of the vaccines in reducing the number of Covid-19 cases. 
+Compute the *ratio* between the *current* number of smoothed new cases (at April 23rd, 2021), and the *maximal* number of smoothed new cases for each country. <br>
+Extract also the total number of vaccinations per hundred people for each country at April 1st, 2021. (We allow an approximately three weeks delay between the vaccinations and their effect). <br>
+Make a scatter-plot of the two with the ratio shown in *log*, i.e. comparing the vaccination rate to the *log* of the reduction in the number of current daily cases compared to its maximum. <br>
+Mark in red in the scatter-plot the points corresponding to Israel and to United Kingdom. How effective are vaccinations for these two countries
+based on the plot? do you see other countries where the effect of vaccination seems very different? 
+
+
+  
+**Solution:**  
+
+Write your solutions here seperately for each question in the followng format: 
+
+1. [MY SOLUTION TEXT - EXPLANATIONS]
+
+```{r}
+# R code for my solution
+```
+
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+
+2. [MY SOLUTION TEXT - EXPLANATIONS]
+
+```{r}
+# R code for my solution
+```
+
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+
+....
+
+
