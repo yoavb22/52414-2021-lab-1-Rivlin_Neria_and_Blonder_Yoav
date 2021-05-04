@@ -136,7 +136,9 @@ Write your solutions here seperately for each question in the followng format:
 1. [MY SOLUTION TEXT - EXPLANATIONS]
 
 ```{r}
-# R code for my solution
+Data <- read.csv("C:\\Users\\Yoav\\Documents\\university\\year3semester2\\R\\labs\\lab 1\\owid-covid-data.csv")
+names(Data)
+names(Data)[4] <- "Date" 
 ```
 
 [MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
@@ -144,11 +146,36 @@ Write your solutions here seperately for each question in the followng format:
 2. [MY SOLUTION TEXT - EXPLANATIONS]
 
 ```{r}
-# R code for my solution
+c_p_m <-(filter(Data,Date == "2021-05-03"))
+c_p_m_1 <- select(c_p_m,location,Date,total_cases_per_million)
+t_c_p_m <- c_p_m_1 %>% 
+  arrange(desc(total_cases_per_million)) %>% 
+  head(5)
+
+d_p_m <-(filter(Data,Date == "2021-05-03"))
+d_p_m_1 <- select(d_p_m,location,Date,total_deaths_per_million)
+t_d_p_m <- d_p_m_1 %>% 
+  arrange(desc(total_deaths_per_million)) %>% 
+  head(5)
+
+v_p_h <-(filter(Data,Date == "2021-05-03"))
+v_p_h_1 <- select(v_p_h,location,Date,total_vaccinations_per_hundred)
+t_v_p_h <- v_p_h_1 %>% 
+  arrange(desc(total_vaccinations_per_hundred)) %>% 
+  head(5)
+
 ```
 
 [MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
-....
+2. [MY SOLUTION TEXT - EXPLANATIONS]
+
+```{r}
+create_plot <- function(data,string){
+
+return(y)
+}
+
+```
 
 
