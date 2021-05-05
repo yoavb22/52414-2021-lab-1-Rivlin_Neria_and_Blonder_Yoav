@@ -174,13 +174,13 @@ t_v_p_h <- v_p_h_1 %>%
 create_plot <- function(Data,string){
 data_for_plot_date <-(filter(Data,Date == "2021-05-03"))
 data_for_plot_location <- (filter(data_for_plot_date ,location == "Africa" |location == "Asia" | location == "Europe" | location =="North America"| location =="Oceania" | location =="South America"))
-data_for_plot_selcet <- select(data_for_plot_location,location,string)
-p <- ggplot(data_for_plot_selcet,
+#data_for_plot_selcet <- select(data_for_plot_location,location,string)
+p <- ggplot(data_for_plot_location,
             aes(x=location, y=string)) + 
 geom_bar(stat = "identity") + 
 coord_flip()
 print (p)
-data_for_plot_selcet
+x = data_for_plot_location
 }
 
 ```
@@ -192,4 +192,35 @@ data_for_plot_selcet
 create_plot(Data,"new_cases")
 
 ```
+4A. [MY SOLUTION TEXT - EXPLANATIONS]
 
+```{r}
+
+```
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+
+4B. [MY SOLUTION TEXT - EXPLANATIONS]
+
+```{r}
+
+```
+
+5A. [MY SOLUTION TEXT - EXPLANATIONS]
+
+```{r}
+NewData <-(filter(Data,Date == "2021-05-03"))
+NewData_1 <- select(NewData,location,total_cases_per_million,total_deaths_per_million)
+par(mfcol = c(1,1), mar = c(4,4,3,3))
+plot(NewData_1$total_cases_per_million,NewData_1$total_deaths_per_million,pch=20,cex = 0.5, xlab = "tcpm", ylab = "tdpm",
+     cex.axis =1.4, cex.lab=1.4)
+abline(lm(NewData_1$total_deaths_per_million~NewData_1$total_cases_per_million),lwd=3,col="blue")
+x = lm(NewData_1$total_deaths_per_million~NewData_1$total_cases_per_million)
+
+```
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+
+5B. [MY SOLUTION TEXT - EXPLANATIONS]
+
+```{r}
+
+```
