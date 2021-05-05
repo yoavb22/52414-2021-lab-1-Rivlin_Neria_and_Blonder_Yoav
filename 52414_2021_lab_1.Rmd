@@ -137,7 +137,6 @@ Write your solutions here seperately for each question in the followng format:
 
 ```{r}
 Data <- read.csv("C:\\Users\\Yoav\\Documents\\university\\year3semester2\\R\\labs\\lab 1\\owid-covid-data.csv")
-names(Data)
 names(Data)[4] <- "Date" 
 ```
 
@@ -168,14 +167,29 @@ t_v_p_h <- v_p_h_1 %>%
 
 [MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
-2. [MY SOLUTION TEXT - EXPLANATIONS]
+3A. [MY SOLUTION TEXT - EXPLANATIONS]
 
 ```{r}
-create_plot <- function(data,string){
 
-return(y)
+create_plot <- function(Data,string){
+data_for_plot_date <-(filter(Data,Date == "2021-05-03"))
+data_for_plot_location <- (filter(data_for_plot_date ,location == "Africa" |location == "Asia" | location == "Europe" | location =="North America"| location =="Oceania" | location =="South America"))
+data_for_plot_selcet <- select(data_for_plot_location,location,string)
+p <- ggplot(data_for_plot_selcet,
+            aes(x=location, y=string)) + 
+geom_bar(stat = "identity") + 
+coord_flip()
+print (p)
+data_for_plot_selcet
 }
 
 ```
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
+3B. [MY SOLUTION TEXT - EXPLANATIONS]
+
+```{r}
+create_plot(Data,"new_cases")
+
+```
 
