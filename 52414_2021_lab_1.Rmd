@@ -133,16 +133,26 @@ based on the plot? do you see other countries where the effect of vaccination se
 
 Write your solutions here seperately for each question in the followng format: 
 
-1. [MY SOLUTION TEXT - EXPLANATIONS]
-
+1.
+In this question we are asked to load the data by using the read.csv function.
+Then we are asked to change the column name from date to Date, in order to do so we
+will use the names function.
 ```{r}
 Data <- read.csv("C:\\Users\\Yoav\\Documents\\university\\year3semester2\\R\\labs\\lab 1\\owid-covid-data.csv")
 names(Data)[4] <- "Date" 
+Data$Date = as.Date(Data$Date)
 ```
 
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
-
-2. [MY SOLUTION TEXT - EXPLANATIONS]
+As we can see we achieved our goal.
+2. 
+In this question we need to List in a table the top 5 countries in terms of 
+current`total_cases_per_million`. We are asked to do so only on a spesific date
+so first we will withdraw that date using the filter function, and than use the
+select function in order to get only the columns we are interested in about this
+date. And at last we will use the head function after arranging the list by 
+descent order to get only the top 5 countries.
+To get the same tables for the other variables `total_deaths_per_million` and
+`total_vaccinations_per_hundred` we will repeat the process.
 
 ```{r}
 c_p_m <-(filter(Data,Date == "2021-05-03"))
@@ -164,23 +174,21 @@ t_v_p_h <- v_p_h_1 %>%
   head(5)
 
 ```
+As we can see we got the tables we were asked to.
 
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
-
-3A. [MY SOLUTION TEXT - EXPLANATIONS]
-
+3A.
+In this question we need to create a function that gets a data set and a column and plots
+in return the values for a certain date. In order to do so first we will withdraw the wanted
+date using the filter function, then we will withdraw the wanted location with the same function.
+After setting that background we will start creating our function that will make a bar plot
+for our column.
 ```{r}
 
-create_plot <- function(Data,string){
-data_for_plot_date <-(filter(Data,Date == "2021-05-03"))
-data_for_plot_location <- (filter(data_for_plot_date ,location == "Africa" |location == "Asia" | location == "Europe" | location =="North America"| location =="Oceania" | location =="South America"))
-#data_for_plot_selcet <- select(data_for_plot_location,location,string)
-p <- ggplot(data_for_plot_location,
-            aes(x=location, y=string)) + 
-geom_bar(stat = "identity") + 
-coord_flip()
-print (p)
-x = data_for_plot_location
+create_plot <- function(data,string){
+clean_data = data[complete.cases(data[, string]),]
+data_for_plot_location <- (filter(clean_data ,location == "Africa" |location == "Asia" | location == "Europe" | location =="North America"| location =="Oceania" | location =="South America"))
+ p <- ggplot(data_for_plot_location, aes(x = Date, y = !!sym(string)),na.rl=TRUE)+ geom_point(aes(color = location)) + labs(x="Date", y=string) 
+print(p)
 }
 
 ```
@@ -189,38 +197,208 @@ x = data_for_plot_location
 3B. [MY SOLUTION TEXT - EXPLANATIONS]
 
 ```{r}
-create_plot(Data,"new_cases")
+new_Data_2 <- Data
+new_Data_2[new_Data_2==0] <- NA
+create_plot(new_Data_2,"new_cases")
+new_Data_2$new_cases_smoothed = log(new_Data_2$new_cases_smoothed)
+names(new_Data_2)[7] <- "log_new_cases_smoothed" 
+new_Data_2$new_deaths_smoothed = log(new_Data_2$new_deaths_smoothed)
+names(new_Data_2)[10] <- "log_new_deaths_smoothed" 
+new_Data_2$new_vaccinations_smoothed = log(new_Data_2$new_vaccinations_smoothed)
+names(new_Data_2)[39] <- "log_new_vaccinations_smoothed" 
+create_plot(new_Data_2,"log_new_cases_smoothed")
+create_plot(new_Data_2,"log_new_deaths_smoothed")
+create_plot(new_Data_2,"log_new_vaccinations_smoothed")
+
 
 ```
+As we can see the log bar plot is less easier to interpret because the log takes large numbers
+and "shrinkes" them so the differences in the table is less visualised. So in our opinion 
+in order to see clearly the difference between the continents it is recommended to use 
+the function without the log.
 4A. [MY SOLUTION TEXT - EXPLANATIONS]
 
 ```{r}
 
+complete_columns <- function(data,col){
+data_4A = data[complete.cases(data[, col]), ]
+group_4 <- group_by(data_4A,Date,continent)
+summ_4 <- summarize(group_4, sum=sum(!!sym(col)))
+table_4 <- filter(summ_4,continent != "")
+new_table_D4 <- left_join(data, table_4 ,by=c("location"="continent" ,"Date"="Date"))
+new_table_D4[, col] <- coalesce(new_table_D4[, col], new_table_D4$sum)
+new_table_D4$mean <- NULL
+
+return(new_table_D4)}
+
+
+
 ```
+
 [MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
 4B. [MY SOLUTION TEXT - EXPLANATIONS]
 
 ```{r}
+new_Data_4B <- complete_columns(Data,"new_tests")
+new_Data_4B[new_Data_4B==0] <- NA
+new_Data_4B$new_tests = log(new_Data_4B$new_tests)
+names(new_Data_4B)[26] <- "log_new_tests" 
+create_plot(new_Data_4B,"log_new_tests")
 
 ```
 
 5A. [MY SOLUTION TEXT - EXPLANATIONS]
 
 ```{r}
-NewData <-(filter(Data,Date == "2021-05-03"))
-NewData_1 <- select(NewData,location,total_cases_per_million,total_deaths_per_million)
-par(mfcol = c(1,1), mar = c(4,4,3,3))
-plot(NewData_1$total_cases_per_million,NewData_1$total_deaths_per_million,pch=20,cex = 0.5, xlab = "tcpm", ylab = "tdpm",
-     cex.axis =1.4, cex.lab=1.4)
-abline(lm(NewData_1$total_deaths_per_million~NewData_1$total_cases_per_million),lwd=3,col="blue")
-x = lm(NewData_1$total_deaths_per_million~NewData_1$total_cases_per_million)
+NewData_1 <-  Data[complete.cases(Data$total_cases_per_million),]
+NewData_2 <-  NewData_1[complete.cases(NewData_1$total_deaths_per_million),]
+NewData_3 <-(filter(NewData_2,Date == "2021-05-03"))
+NewData_4 <- select(NewData_3,location,total_cases_per_million,total_deaths_per_million)
 
+par(mfcol = c(1,1), mar = c(4,4,3,3))
+plot(NewData_4$total_cases_per_million,NewData_4$total_deaths_per_million,pch=20,cex = 0.5, xlab = "tcpm", ylab = "tdpm",
+     cex.axis =1.4, cex.lab=1.4)
+abline(lm(NewData_4$total_deaths_per_million~NewData_4$total_cases_per_million),lwd=3,col="blue")
+x = lm(NewData_4$total_deaths_per_million~NewData_4$total_cases_per_million)
+sum_x <- summary(x)
+intercept <- sum_x$coefficients[1]
+slope <- sum_x$coefficients[2]
 ```
+the slope is 1.609e-02 
 [MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
 5B. [MY SOLUTION TEXT - EXPLANATIONS]
 
 ```{r}
+NewData_B1 <-  NewData_2[complete.cases(NewData_2$new_cases),]
+NewData_B2 <-  NewData_B1[complete.cases(NewData_B1$new_deaths),]
+group_loc <- group_by(NewData_B2, location)
+group_summ <- summarize(group_loc, max_new_cases_date = as.Date(Date[which.max(new_cases)]),max_new_deaths_date = as.Date(Date[which.max(new_deaths)]))
+new_table <- merge(NewData_4, group_summ,
+      by.x ="location" , by.y ="location" ,
+      all.x = TRUE, all.y =TRUE )
+final_table <-  new_table[complete.cases(new_table$max_new_cases_date),]
+final_table_5B <-  final_table[complete.cases(final_table$max_new_deaths_date),]
+par(mfcol = c(1,1), mar = c(4,4,3,3))
+plot(final_table_5B$max_new_cases_date,final_table_5B$max_new_deaths_date,pch=20,cex = 0.5, xlab = "max_new_cases_date", ylab = "max_new_deaths_date",cex.axis =1.4, cex.lab=1.4)
+abline(lm((final_table_5B$max_new_cases_date)~final_table_5B$max_new_deaths_date),lwd=3,col="blue")
+reg_5B = lm(final_table_5B$max_new_cases_date~final_table_5B$max_new_deaths_date)
+```
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+
+6. [MY SOLUTION TEXT - EXPLANATIONS]
+
+```{r}
+data_6 = select(Data,location,Date,new_cases,new_deaths,new_vaccinations)
+data_for_plot_location_6 <- (filter(data_6 ,location == "Africa" |location == "Asia" | location == "Europe" | location =="North America"| location =="Oceania" | location =="South America"))
+group_6 <- group_by(data_for_plot_location_6,year(Date),month(Date))
+summ_6 <- summarize(group_6, all_world_cases = sum(new_cases),all_world_deaths = sum(new_deaths),all_world_vaccinations = sum(new_vaccinations))
+print(summ_6)
+barplot(summ_6$all_world_cases,ylab="all world cases",xlab="month",col="yellow")
+barplot(summ_6$all_world_deaths,ylab="all world deaths",xlab="month",col="red")
+barplot(summ_6$all_world_vaccinations,ylab="all world vaccinations",xlab="month",col="green")
 
 ```
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+
+7.  In this question we are asked to create a new column in our data that tells us what
+is the proportion between the total deaths and the total cases in a certain date and place.
+In order to do so we will use the cbind function to make the new column in the data.
+Next we are asked to create a histogram of the current death rates over all countries with
+50 bins, we will use the ggplot function to do so. Finally we need to make a new table of the
+top 3 countries that have the heighest death rate, to do so we will use the arrange and desc
+functions and the top_n function to take onlt the top 3.
+
+```{r}
+NewData_7A <-  Data[complete.cases(Data$total_deaths),]
+NewData_7B <-  NewData_7A[complete.cases(NewData_7A$total_cases),]
+death_rate <- (NewData_7B$total_deaths / NewData_7B$total_cases)
+New_Data_Q_7 <- cbind(NewData_7B, death_rate)
+C_Data_Q_7 <-(filter(New_Data_Q_7,Date == "2021-05-03"))
+p_7 <- hist(C_Data_Q_7$death_rate,col="red",xlim=c(0,0.25),breaks=c(50),xlab="death rate")
+t_d_r <- select(C_Data_Q_7,location,death_rate)
+t_3_d_r <- t_d_r %>% 
+  arrange(desc(death_rate)) %>% 
+  head(3)  
+
+```
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+
+8. In this question we are asked to compare the vaccination strategy in different states
+according to the proportion between people who got 2 doses of the vaccination and peolpe
+who got only one dose. This knowledge can tell us wheter the country is trying to vacciante
+as quickly as she can as many people as she can, to create some sort of herd vaccination,
+because she belives the main antibodies are already in the blood system so there is no
+reason to rush to vaccinate the second time because the danger is almost gone.
+Or on the other hand to see if the countries want to vaccinate two times as quickly as they can.
+In order to do so, we will create a new column of the proportion as we did in the last 
+question, then we will filter only the counties we are asked to compare, and then take the 
+wanted date, and us the plot function to see our results. If the proportion is high we can
+assume that the country encourage people to get two doses as quickly as they can, and if the
+proportion is low then not too many people are hurring to get the second dose.
+```{r}
+NewData_8A <-  Data[complete.cases(Data$people_fully_vaccinated),]
+NewData_8B <-  NewData_8A[complete.cases(NewData_8A$people_vaccinated),]
+fully_vaci <- NewData_8B$people_fully_vaccinated
+vaci <- NewData_8B$people_vaccinated
+two_dose_fraction <- (fully_vaci/vaci)
+New_Data_Q_8 <- cbind(NewData_8B, two_dose_fraction)
+states_vaccinations_compared <- filter(New_Data_Q_8,(location == "Israel" | location == "United States" | location == "United Kingdom"))
+p_8 <- ggplot(states_vaccinations_compared, aes(x = Date, y = two_dose_fraction))+ geom_point(aes(color = location)) + labs(x="Date", y="two_dose_fraction") 
+print(p_8)
+
+```
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+
+9A. [MY SOLUTION TEXT - EXPLANATIONS]
+
+```{r}
+cros_cor <- function(data,country, col_1, col_2){
+data_for_plot_country <- (filter(data ,location == country))
+cc = rep(-60,60)
+for (i in c(-60,60)){
+  cc[i] = cor(data$col_1[])
+}
+}
+```
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+
+9B. [MY SOLUTION TEXT - EXPLANATIONS]
+
+```{r}
+
+```
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+
+10. [MY SOLUTION TEXT - EXPLANATIONS]
+
+```{r}
+NewData_10A <-  Data[complete.cases(Data$new_cases_smoothed),]
+data_10f_B <-(filter(NewData_10A,Date == "2021-04-23"))
+data_10f_C <-select(data_10f_B,location,new_cases_smoothed)
+data_10f_B1 <-(filter(NewData_10A,Date == "2021-04-1"))
+data_10f_V <-select(data_10f_B1,location,people_vaccinated_per_hundred)
+group_10 <- group_by(NewData_10A, location)
+summ_10 <- summarize(group_10, max_new_cases = (new_cases_smoothed[which.max(new_cases_smoothed)]))
+new_table_D10 <- left_join(summ_10,data_10f_C,by=c("location"))
+new_table_D10A <- left_join(new_table_D10,data_10f_V,by=c("location"))
+new_table_D10B <-  new_table_D10A[complete.cases(new_table_D10A$people_vaccinated_per_hundred),]
+new_table_D10C <-  new_table_D10B[complete.cases(new_table_D10B$new_cases_smoothed),]
+max_new_cases <- new_table_D10C$max_new_cases
+current_new_cases <- new_table_D10C$new_cases_smoothed
+max_ratio_now_smo_cases <- (current_new_cases/max_new_cases)
+New_Data_Q_10 <- cbind(new_table_D10C, max_ratio_now_smo_cases)
+New_Data_Q_10_A <-select(New_Data_Q_10,location,people_vaccinated_per_hundred,max_ratio_now_smo_cases)
+New_Data_Q_10_A$max_ratio_now_smo_cases = log(New_Data_Q_10_A$max_ratio_now_smo_cases)
+names(New_Data_Q_10_A)[3] <- "log_max_ratio_now_smo_cases" 
+New_Data_Q_10_A$people_vaccinated_per_hundred = log(New_Data_Q_10_A$people_vaccinated_per_hundred)
+names(New_Data_Q_10_A)[2] <- "log_people_vaccinated_per_hundred" 
+p_10 <- ggplot(data = New_Data_Q_10_A, aes(x = log_max_ratio_now_smo_cases, y = log_people_vaccinated_per_hundred))
+p_10 + geom_point(data = New_Data_Q_10_A, color = "gray") + 
+   geom_point(data = New_Data_Q_10_A[37,], color = "red") + 
+     geom_point(data = New_Data_Q_10_A[83,], color = "red")
+
+
+```
+[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
