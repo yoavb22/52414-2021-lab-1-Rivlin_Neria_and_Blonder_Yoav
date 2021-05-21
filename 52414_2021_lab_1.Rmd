@@ -135,8 +135,8 @@ Write your solutions here seperately for each question in the followng format:
 
 1.
 In this question we are asked to load the data by using the read.csv function.
-Then we are asked to change the column name from date to Date, in order to do so we
-will use the names function.
+Then we are asked to change the column date's class, in order to do so we
+will use the class function.
 ```{r}
 Data <- read.csv("C:\\Users\\Yoav\\Documents\\university\\year3semester2\\R\\labs\\lab 1\\owid-covid-data.csv")
 names(Data)[4] <- "Date" 
@@ -144,6 +144,7 @@ Data$Date = as.Date(Data$Date)
 ```
 
 As we can see we achieved our goal.
+
 2. 
 In this question we need to List in a table the top 5 countries in terms of 
 current`total_cases_per_million`. We are asked to do so only on a spesific date
@@ -160,28 +161,25 @@ c_p_m_1 <- select(c_p_m,location,Date,total_cases_per_million)
 t_c_p_m <- c_p_m_1 %>% 
   arrange(desc(total_cases_per_million)) %>% 
   head(5)
-
+print(t_c_p_m)
 d_p_m <-(filter(Data,Date == "2021-05-03"))
 d_p_m_1 <- select(d_p_m,location,Date,total_deaths_per_million)
 t_d_p_m <- d_p_m_1 %>% 
   arrange(desc(total_deaths_per_million)) %>% 
   head(5)
-
+print(t_d_p_m)
 v_p_h <-(filter(Data,Date == "2021-05-03"))
 v_p_h_1 <- select(v_p_h,location,Date,total_vaccinations_per_hundred)
 t_v_p_h <- v_p_h_1 %>% 
   arrange(desc(total_vaccinations_per_hundred)) %>% 
   head(5)
+print(t_v_p_h)
 
 ```
 As we can see we got the tables we were asked to.
 
 3A.
-In this question we need to create a function that gets a data set and a column and plots
-in return the values for a certain date. In order to do so first we will withdraw the wanted
-date using the filter function, then we will withdraw the wanted location with the same function.
-After setting that background we will start creating our function that will make a bar plot
-for our column.
+In this question we need to create a function that gets a data set and a column and plots in return the values for a certain date. In order to do so first we will withdraw the wanted date using the `filter` function, then we will withdraw the wanted location with the same function. After setting that background we will start creating our function that will make a bar plot for our column.
 ```{r}
 
 create_plot <- function(data,string){
@@ -192,9 +190,8 @@ print(p)
 }
 
 ```
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
-3B. [MY SOLUTION TEXT - EXPLANATIONS]
+3B. Here we use our function on a few variables:
 
 ```{r}
 new_Data_2 <- Data
@@ -212,11 +209,17 @@ create_plot(new_Data_2,"log_new_vaccinations_smoothed")
 
 
 ```
-As we can see the log bar plot is less easier to interpret because the log takes large numbers
-and "shrinkes" them so the differences in the table is less visualised. So in our opinion 
-in order to see clearly the difference between the continents it is recommended to use 
-the function without the log.
-4A. [MY SOLUTION TEXT - EXPLANATIONS]
+
+As we can see the log bar plot is easier to interpret because the log takes large numbers and "shrinkes" them so the differences in the table is more visualised. So in our opinion in order to see clearly the difference between the continents it is recommended to use the function with the log.
+As we can see the new cases increase as long as we go on with the dates,
+but around July 2020 it stabilizes.
+As for the new deaths we can see a peak on april 2020 but since than for all the continents the number of new deaths is stable, except for Oceania who controlled the situation fast but got another wave between July and October, and now lately they have many deaths again.
+As for the new vaccinations we can see that it increase as long as we go on with the dates, but Oceania is the continent with the smallest number of vaccinations over the time, which might explain why they expirience outbreaks over and over.
+the rest of the world are vaccianting a bit faster which might explain why the pandemic is quite stable since Jan 2021.
+
+
+4A. In this question we need to repeat the last one but we get variables that have NA, so in order for the function to work we need to fill in those NA the weighted average of the entire countries in the continent.
+In order to overcome that obstacle we will use the `complete.cases` function to get rid of them. Then we `group_by` the continents and `summarize` them by the sum of the wanted column. Next we we `filter` the summarized group for the variables that have a continent name. Finally we will make a new column with the new data and push it in the data, with the `coalesce` function after taking the mean for each continent.
 
 ```{r}
 
@@ -235,9 +238,8 @@ return(new_table_D4)}
 
 ```
 
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
-4B. [MY SOLUTION TEXT - EXPLANATIONS]
+4B. We apply the function we created on the wanted column new cases and activate the function from Q3 on it:
 
 ```{r}
 new_Data_4B <- complete_columns(Data,"new_tests")
@@ -248,27 +250,26 @@ create_plot(new_Data_4B,"log_new_tests")
 
 ```
 
-5A. [MY SOLUTION TEXT - EXPLANATIONS]
+5A. 
+In this question we want to see the process the number of cases and deaths is going through In the different countries. To do so we plot a graph of those by making a relevent data frame, and we plot a linear regression line as well.
+First we create the wanted data frame, then we avoid `Na` and `filter` the certain date, and the data frame is complete. Next we use the `plot` and `abline(lm())` functions to see the behavior better:
 
 ```{r}
 NewData_1 <-  Data[complete.cases(Data$total_cases_per_million),]
 NewData_2 <-  NewData_1[complete.cases(NewData_1$total_deaths_per_million),]
 NewData_3 <-(filter(NewData_2,Date == "2021-05-03"))
 NewData_4 <- select(NewData_3,location,total_cases_per_million,total_deaths_per_million)
-
-par(mfcol = c(1,1), mar = c(4,4,3,3))
-plot(NewData_4$total_cases_per_million,NewData_4$total_deaths_per_million,pch=20,cex = 0.5, xlab = "tcpm", ylab = "tdpm",
-     cex.axis =1.4, cex.lab=1.4)
-abline(lm(NewData_4$total_deaths_per_million~NewData_4$total_cases_per_million),lwd=3,col="blue")
+ggplot(data = NewData_4, aes(x = total_cases_per_million, y = total_deaths_per_million),) + 
+  geom_point(color='red') +
+  geom_smooth(method = "lm", se = FALSE)
 x = lm(NewData_4$total_deaths_per_million~NewData_4$total_cases_per_million)
 sum_x <- summary(x)
-intercept <- sum_x$coefficients[1]
-slope <- sum_x$coefficients[2]
+print(intercept <- sum_x$coefficients[1])
+print(slope <- sum_x$coefficients[2])
 ```
-the slope is 1.609e-02 
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+the slope is 1.609e-02
 
-5B. [MY SOLUTION TEXT - EXPLANATIONS]
+5B. To find for each country the date where the number of cases was maximal we will use as we saw in class `which.max` function, after we `group_by` the cases and deaths. Then we make a `plot` as we did in 5.a and check the slope and intersect to see how well the connection between those two is.
 
 ```{r}
 NewData_B1 <-  NewData_2[complete.cases(NewData_2$new_cases),]
@@ -280,14 +281,20 @@ new_table <- merge(NewData_4, group_summ,
       all.x = TRUE, all.y =TRUE )
 final_table <-  new_table[complete.cases(new_table$max_new_cases_date),]
 final_table_5B <-  final_table[complete.cases(final_table$max_new_deaths_date),]
-par(mfcol = c(1,1), mar = c(4,4,3,3))
-plot(final_table_5B$max_new_cases_date,final_table_5B$max_new_deaths_date,pch=20,cex = 0.5, xlab = "max_new_cases_date", ylab = "max_new_deaths_date",cex.axis =1.4, cex.lab=1.4)
-abline(lm((final_table_5B$max_new_cases_date)~final_table_5B$max_new_deaths_date),lwd=3,col="blue")
-reg_5B = lm(final_table_5B$max_new_cases_date~final_table_5B$max_new_deaths_date)
+ggplot(data = final_table_5B, aes(x = max_new_cases_date, y = max_new_deaths_date),) + 
+  geom_point(color='red') +
+  geom_smooth(method = "lm", se = FALSE)
+reg_5B = lm(as.numeric(final_table_5B$max_new_cases_date)~as.numeric(final_table_5B$max_new_deaths_date))
+sum_5B <- summary(reg_5B)
+print(intercept <- sum_5B$coefficients[1])
+print(slope <- sum_5B$coefficients[2])
 ```
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
-6. [MY SOLUTION TEXT - EXPLANATIONS]
+As we can see the slope is 0.43. If the slope was close to 1 we could assume easily that there is ah very high connection between the date where the country had her max deaths and max new cases, which makes a lot of sense because more people sick means more deaths cases.
+From the fact that the intersect is positive we can understand that the maximum deaths cases comes after the maximum new cases, so if the max new cases comes for example at Jan 1, the max new deaths will appear a few days later.
+
+6. Here we want to see the data frame on a monthly basis, but for certain variables. In order to do so we first `select` the wanted variables, then we `group_by` continents and dates our data. Next we `sum` all the observations for the certain month, and `summarize` it.
+Now we have all our data and we can make a `bar_plot` to compare as we wanted.
 
 ```{r}
 data_6 = select(Data,location,Date,new_cases,new_deaths,new_vaccinations)
@@ -300,15 +307,8 @@ barplot(summ_6$all_world_deaths,ylab="all world deaths",xlab="month",col="red")
 barplot(summ_6$all_world_vaccinations,ylab="all world vaccinations",xlab="month",col="green")
 
 ```
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
-7.  In this question we are asked to create a new column in our data that tells us what
-is the proportion between the total deaths and the total cases in a certain date and place.
-In order to do so we will use the cbind function to make the new column in the data.
-Next we are asked to create a histogram of the current death rates over all countries with
-50 bins, we will use the ggplot function to do so. Finally we need to make a new table of the
-top 3 countries that have the heighest death rate, to do so we will use the arrange and desc
-functions and the top_n function to take onlt the top 3.
+7.In this question we are asked to create a new column in our data that tells us what is the proportion between the total deaths and the total cases in a certain date and place. In order to do so we will use the `cbind` function to make the new column in the data. Next we are asked to create a histogram of the current death rates over all countries with 50 bins, we will use the `ggplot` function to do so. Finally we need to make a new table of the top 3 countries that have the heighest death rate, to do so we will use the `arrange` and `desc` functions and the `top_n` function to take only the top 3.
 
 ```{r}
 NewData_7A <-  Data[complete.cases(Data$total_deaths),]
@@ -323,20 +323,9 @@ t_3_d_r <- t_d_r %>%
   head(3)  
 
 ```
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
-8. In this question we are asked to compare the vaccination strategy in different states
-according to the proportion between people who got 2 doses of the vaccination and peolpe
-who got only one dose. This knowledge can tell us wheter the country is trying to vacciante
-as quickly as she can as many people as she can, to create some sort of herd vaccination,
-because she belives the main antibodies are already in the blood system so there is no
-reason to rush to vaccinate the second time because the danger is almost gone.
-Or on the other hand to see if the countries want to vaccinate two times as quickly as they can.
-In order to do so, we will create a new column of the proportion as we did in the last 
-question, then we will filter only the counties we are asked to compare, and then take the 
-wanted date, and us the plot function to see our results. If the proportion is high we can
-assume that the country encourage people to get two doses as quickly as they can, and if the
-proportion is low then not too many people are hurring to get the second dose.
+8. In this question we are asked to compare the vaccination strategy in different states according to the proportion between people who got 2 doses of the vaccination and peolpe who got only one dose. This knowledge can tell us whether the country is trying to vaccinate as quickly as she can as many people as she can, to create some sort of herd vaccination, because she belives the main antibodies are already in the blood system so there is no
+reason to rush to vaccinate the second time because the danger is almost gone. Or on the other hand to see if the countries want to vaccinate two times as quickly as they can. In order to do so, we will create a new column of the proportion as we did in the last question, then we will `filter` only the counties we are asked to compare, and then take the wanted date, and us the `plot` function to see our results. If the proportion is high we can assume that the country encourage people to get two doses as quickly as they can, and if the proportion is low then not too many people are hurring to get the second dose.
 ```{r}
 NewData_8A <-  Data[complete.cases(Data$people_fully_vaccinated),]
 NewData_8B <-  NewData_8A[complete.cases(NewData_8A$people_vaccinated),]
@@ -349,30 +338,40 @@ p_8 <- ggplot(states_vaccinations_compared, aes(x = Date, y = two_dose_fraction)
 print(p_8)
 
 ```
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
-9A. [MY SOLUTION TEXT - EXPLANATIONS]
+As we can see clearly from the plot Israel encouraged her citizens to get both doses as quickly as they can so since mid Jan 2021 they are ahead of United kingdom and the United states by far, and up till this day, she leads the United states by almost 20%, and the United kingdom by almost 40%.
+So it is easy to say that Israel encourage her citizens to get both doses as quickly as they can and she has almost 100% of those. The United states have the same strategy but the citizens does not coaperate that much or they get only one dose and then they are calm, because she has only 74%. As for the United Kingdom we can see that only less than half of those who vaccinated got the second dose which tells us the policy of the country is to vaccinate one time and the second dose is not that needed.
+
+9A. In this complicated question we are asked to check the connection between 2 columns in the data with the cross correlation. We are given that the connection shouled be checked for 60 days back and forth, meaning:
+We will build our function so she filters the wanted columns. Then we will build a cross correlation vector in length of 121 that will check the correlation between the i-th value in the first column and the 60+i-th value in the second column.
+The function will return the cross correlation vector cc:
 
 ```{r}
 cros_cor <- function(data,country, col_1, col_2){
-data_for_plot_country <- (filter(data ,location == country))
-cc = rep(-60,60)
-for (i in c(-60,60)){
-  cc[i] = cor(data$col_1[])
+data_for_plot_country <- filter(data ,(location == country))
+new_table_9 <- select(data_for_plot_country,location,col_1,col_2)
+cc = rep(0,121)
+for (i in -60:60){
+  if (i>0){
+  cc[60+i] =
+    cor((new_table_9[, col_1][1:((length(new_table_9[, col_2]))-i+1)]%>%replace_na(0)),(new_table_9[, col_2][(i):(length(new_table_9[, col_2]))]%>%replace_na(0)))}
+  else{cc[61+i] =cor(new_table_9[, col_1][(1-i):(length(new_table_9[, col_1]))]%>%replace_na(0),new_table_9[, col_2][1:((length(new_table_9[, col_2]))+i)]%>%replace_na(0))}}
+  return(cc)
 }
-}
+
 ```
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
-9B. [MY SOLUTION TEXT - EXPLANATIONS]
-
+9B. We apply the function on Canada' and check the cross correlation between her new_cases and new_deaths:
 ```{r}
-
+plot(-60:60, cros_cor(Data, "Canada", "new_cases", "new_deaths"))
+print(which.max(cros_cor(Data, "Canada", "new_cases", "new_deaths")) - 60)
+ 
 ```
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
 
-10. [MY SOLUTION TEXT - EXPLANATIONS]
+As we can see the highest correlation between the two is after 18 days, which means that most of those who got sick and died, died after 18 days. The correlation has the shape of a continous function which indicates even more that the connection between the two is direct.
 
+10. Here we want to examine if the data shows evidence for the effectiveness of the vaccines in reducing the number of Covid-19 cases. To do so we will compute the ratio between the number of new_cases on April 23 and the maximal number of smoothed cases for each country. We will look at thetotal number of vaccinations per hundred people for each country at April 1st, 2021.
+Finally we will plot the two variables for each country on the same graph and take a look at israel and the United kingdom to check the effectivness of the vaccinations there
 ```{r}
 NewData_10A <-  Data[complete.cases(Data$new_cases_smoothed),]
 data_10f_B <-(filter(NewData_10A,Date == "2021-04-23"))
@@ -401,4 +400,5 @@ p_10 + geom_point(data = New_Data_Q_10_A, color = "gray") +
 
 
 ```
-[MY SOLUTION TEXT - DESCRIPTION OF RESULTS]
+
+As we can see from the plot, both Israel and the United Kingdom have a lot of vaccinated citizens as a comparison to the rest of the world, and they are between the 5 countries with almost no new_cases, so we can say that the vaccination acctually works quite fine, and countries shouled encourage people to vaccinate. 
